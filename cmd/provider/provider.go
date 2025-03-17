@@ -1,19 +1,31 @@
 package provider
 
 import (
+	"reactionservice/infrastructure/atlas"
 	"reactionservice/infrastructure/kafka"
 	"reactionservice/internal/api"
 	"reactionservice/internal/bus"
+	database "reactionservice/internal/db"
 )
 
 type Provider struct {
-	env string
+	env     string
+	connStr string
 }
 
-func NewProvider(env string) *Provider {
+func NewProvider(env, connStr string) *Provider {
 	return &Provider{
-		env: env,
+		env:     env,
+		connStr: connStr,
 	}
+}
+
+func (p *Provider) ProvideAtlasCLient() (*atlas.AtlasClient, error) {
+	return atlas.NewAtlasClient(p.connStr)
+}
+
+func (p *Provider) ProvideDb() (*database.Database, error) {
+	return database.NewDatabase(p.connStr)
 }
 
 func (p *Provider) ProvideEventBus() (*bus.EventBus, error) {

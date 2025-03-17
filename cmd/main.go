@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"reactionservice/cmd/provider"
+	"reactionservice/infrastructure/atlas"
 	"reactionservice/internal/api"
 	"strings"
 	"sync"
@@ -25,6 +26,7 @@ type app struct {
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	env := strings.TrimSpace(os.Getenv("ENVIRONMENT"))
+	connStr := strings.TrimSpace(os.Getenv("CONN_STR"))
 
 	app := &app{
 		ctx:    ctx,
@@ -36,10 +38,21 @@ func main() {
 
 	log.Info().Msgf("Starting ReactionService service in [%s] enviroment...\n", env)
 
-	provider := provider.NewProvider(env)
+	provider := provider.NewProvider(env, connStr)
+
+	migrator, err := provider.ProvideAtlasCLient()
+	if err != nil {
+		os.Exit(1)
+	}
+	database, err := provider.ProvideDb()
+	if err != nil {
+		os.Exit(1)
+	}
+	defer database.Client.Close()
 
 	apiEnpoint := provider.ProvideApiEndpoint()
 
+	app.runConfigurationTasks(migrator)
 	app.runServerTasks(apiEnpoint)
 }
 
@@ -55,6 +68,12 @@ func (app *app) configuringLog() {
 	log.Logger = log.With().Caller().Logger()
 }
 
+func (app *app) runConfigurationTasks(atlasCLient *atlas.AtlasClient) {
+	app.configuringTasks.Add(1)
+	go app.applyMigrations(atlasCLient)
+	app.configuringTasks.Wait()
+}
+
 func (app *app) runServerTasks(apiEnpoint *api.Api) {
 	app.runningTasks.Add(1)
 	go app.runApiEndpoint(apiEnpoint)
@@ -62,6 +81,15 @@ func (app *app) runServerTasks(apiEnpoint *api.Api) {
 	blockForever()
 
 	app.shutdown()
+}
+
+func (app *app) applyMigrations(atlasCLient *atlas.AtlasClient) {
+	defer app.configuringTasks.Done()
+
+	err := atlasCLient.ApplyMigrations(app.ctx)
+	if err != nil {
+		log.Fatal().Stack().Err(err).Msgf("Failed to apply migrations")
+	}
 }
 
 func (app *app) runApiEndpoint(apiEnpoint *api.Api) {
