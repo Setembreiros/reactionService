@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"reactionservice/cmd/provider"
+	"reactionservice/internal/api"
 	"strings"
 	"sync"
 	"syscall"
@@ -35,9 +36,11 @@ func main() {
 
 	log.Info().Msgf("Starting ReactionService service in [%s] enviroment...\n", env)
 
-	_ = provider.NewProvider(env)
+	provider := provider.NewProvider(env)
 
-	app.runServerTasks()
+	apiEnpoint := provider.ProvideApiEndpoint()
+
+	app.runServerTasks(apiEnpoint)
 }
 
 func (app *app) configuringLog() {
@@ -52,10 +55,23 @@ func (app *app) configuringLog() {
 	log.Logger = log.With().Caller().Logger()
 }
 
-func (app *app) runServerTasks() {
+func (app *app) runServerTasks(apiEnpoint *api.Api) {
+	app.runningTasks.Add(1)
+	go app.runApiEndpoint(apiEnpoint)
+
 	blockForever()
 
 	app.shutdown()
+}
+
+func (app *app) runApiEndpoint(apiEnpoint *api.Api) {
+	defer app.runningTasks.Done()
+
+	err := apiEnpoint.Run(app.ctx)
+	if err != nil {
+		log.Panic().Err(err).Msg("Closing ReactionService Api failed")
+	}
+	log.Info().Msg("ReactionService Api stopped")
 }
 
 func blockForever() {
