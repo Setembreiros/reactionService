@@ -20,7 +20,7 @@ func NewKafkaConsumer(brokers []string, eventBus *bus.EventBus) (*KafkaConsumer,
 	config.Version = sarama.V2_0_0_0
 	config.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.NewBalanceStrategySticky()}
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
-	groupId := "userservice-group"
+	groupId := "reactionservice-group"
 
 	consumerGroup, err := sarama.NewConsumerGroup(brokers, groupId, config)
 	if err != nil {
