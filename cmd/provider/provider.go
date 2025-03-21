@@ -45,6 +45,16 @@ func (p *Provider) ProvideApiControllers() []api.Controller {
 	return []api.Controller{}
 }
 
+func (p *Provider) ProvideSubscriptions(database *database.Database) *[]bus.EventSubscription {
+	return &[]bus.EventSubscription{}
+}
+
+func (p *Provider) ProvideKafkaConsumer(eventBus *bus.EventBus) (*kafka.KafkaConsumer, error) {
+	brokers := p.kafkaBrokers()
+
+	return kafka.NewKafkaConsumer(brokers, eventBus)
+}
+
 func (p *Provider) kafkaBrokers() []string {
 	if p.env == "development" {
 		return []string{

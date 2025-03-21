@@ -6,7 +6,9 @@ import (
 	"os/signal"
 	"reactionservice/cmd/provider"
 	"reactionservice/infrastructure/atlas"
+	"reactionservice/infrastructure/kafka"
 	"reactionservice/internal/api"
+	"reactionservice/internal/bus"
 	"strings"
 	"sync"
 	"syscall"
@@ -49,11 +51,19 @@ func main() {
 		os.Exit(1)
 	}
 	defer database.Client.Close()
-
+	eventBus, err := provider.ProvideEventBus()
+	if err != nil {
+		os.Exit(1)
+	}
+	subscriptions := provider.ProvideSubscriptions(database)
 	apiEnpoint := provider.ProvideApiEndpoint()
+	kafkaConsumer, err := provider.ProvideKafkaConsumer(eventBus)
+	if err != nil {
+		os.Exit(1)
+	}
 
-	app.runConfigurationTasks(migrator)
-	app.runServerTasks(apiEnpoint)
+	app.runConfigurationTasks(migrator, subscriptions, eventBus)
+	app.runServerTasks(kafkaConsumer, apiEnpoint)
 }
 
 func (app *app) configuringLog() {
@@ -68,14 +78,16 @@ func (app *app) configuringLog() {
 	log.Logger = log.With().Caller().Logger()
 }
 
-func (app *app) runConfigurationTasks(atlasCLient *atlas.AtlasClient) {
-	app.configuringTasks.Add(1)
+func (app *app) runConfigurationTasks(atlasCLient *atlas.AtlasClient, subscriptions *[]bus.EventSubscription, eventBus *bus.EventBus) {
+	app.configuringTasks.Add(2)
 	go app.applyMigrations(atlasCLient)
+	go app.subcribeEvents(subscriptions, eventBus) // Always subscribe event before init Kafka
 	app.configuringTasks.Wait()
 }
 
-func (app *app) runServerTasks(apiEnpoint *api.Api) {
-	app.runningTasks.Add(1)
+func (app *app) runServerTasks(kafkaConsumer *kafka.KafkaConsumer, apiEnpoint *api.Api) {
+	app.runningTasks.Add(2)
+	go app.initKafkaConsumption(kafkaConsumer)
 	go app.runApiEndpoint(apiEnpoint)
 
 	blockForever()
@@ -90,6 +102,29 @@ func (app *app) applyMigrations(atlasCLient *atlas.AtlasClient) {
 	if err != nil {
 		log.Fatal().Stack().Err(err).Msgf("Failed to apply migrations")
 	}
+}
+
+func (app *app) subcribeEvents(subscriptions *[]bus.EventSubscription, eventBus *bus.EventBus) {
+	defer app.configuringTasks.Done()
+
+	log.Info().Msg("Subscribing events...")
+
+	for _, subscription := range *subscriptions {
+		eventBus.Subscribe(&subscription, app.ctx)
+		log.Info().Msgf("%s subscribed", subscription.EventType)
+	}
+
+	log.Info().Msg("All events subscribed")
+}
+
+func (app *app) initKafkaConsumption(kafkaConsumer *kafka.KafkaConsumer) {
+	defer app.runningTasks.Done()
+
+	err := kafkaConsumer.InitConsumption(app.ctx)
+	if err != nil {
+		log.Panic().Stack().Err(err).Msg("Kafka Consumption failed")
+	}
+	log.Info().Msg("Kafka Consumer Group stopped")
 }
 
 func (app *app) runApiEndpoint(apiEnpoint *api.Api) {
