@@ -67,11 +67,12 @@ func (k *KafkaConsumer) runConsumerGroup(ctx context.Context, wg *sync.WaitGroup
 		// `Consume` should be called inside an infinite loop, when a
 		// server-side rebalance happens, the consumer session will need to be
 		// recreated to get the new claims
-		if len(getTopics()) == 0 {
+		topics := getTopics()
+		if len(topics) == 0 {
 			log.Warn().Msg("No topics provided. Terminating Kafka comsumption.")
 			return
 		}
-		if err := k.ConsumerGroup.Consume(ctx, getTopics(), consumer); err != nil {
+		if err := k.ConsumerGroup.Consume(ctx, topics, consumer); err != nil {
 			if errors.Is(err, sarama.ErrClosedConsumerGroup) {
 				log.Error().Stack().Err(err).Msg("Consumer Group was closed")
 				return
