@@ -1,30 +1,25 @@
 package database
 
 import (
-	"database/sql"
+	model "reactionservice/internal/model/domain"
 
 	_ "github.com/lib/pq"
-	"github.com/rs/zerolog/log"
 )
 
+//go:generate mockgen -source=database.go -destination=test/mock/database.go
+
 type Database struct {
-	Client *sql.DB
+	Client DatabaseClient
 }
 
-func NewDatabase(connStr string) (*Database, error) {
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Error().Stack().Err(err).Msg("Couldn't open a connection with the database")
-		return nil, err
-	}
+type DatabaseClient interface {
+	Clean()
+	CreateLikePost(data *model.LikePost) error
+	GetLikePost(postId, username string) (*model.LikePost, error)
+}
 
-	err = db.Ping()
-	if err != nil {
-		log.Error().Stack().Err(err).Msg("Database is not reachable")
-		return nil, err
-	}
-
+func NewDatabase(client DatabaseClient) *Database {
 	return &Database{
-		Client: db,
-	}, nil
+		Client: client,
+	}
 }
