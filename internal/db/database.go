@@ -16,6 +16,7 @@ type DatabaseClient interface {
 	Clean()
 	CreateLikePost(data *model.LikePost) error
 	GetLikePost(postId, username string) (*model.LikePost, error)
+	DeleteLikePost(data *model.LikePost) error
 }
 
 func NewDatabase(client DatabaseClient) *Database {
