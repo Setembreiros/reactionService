@@ -145,7 +145,7 @@ func (sd *SqlDatabase) DeleteLikePost(data *model.LikePost) error {
 	}
 
 	if rowsAffected == 0 {
-		log.Info().Msgf("No like found to delete for username: %s -> postId: %s", data.Username, data.PostId)
+		log.Warn().Msgf("No like found to delete for username: %s -> postId: %s", data.Username, data.PostId)
 	} else {
 		log.Info().Msgf("Like deleted successfully, username: %s -> postId: %s", data.Username, data.PostId)
 	}
