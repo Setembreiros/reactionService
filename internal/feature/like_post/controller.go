@@ -2,7 +2,7 @@ package like_post
 
 import (
 	"reactionservice/internal/api"
-	"strconv"
+	model "reactionservice/internal/model/domain"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -15,7 +15,7 @@ type LikePostController struct {
 }
 
 type Service interface {
-	LikePost(postId uint64) error
+	CreateLikePost(like *model.LikePost) error
 }
 
 func NewLikePostController(service Service) *LikePostController {
@@ -25,26 +25,20 @@ func NewLikePostController(service Service) *LikePostController {
 }
 
 func (controller *LikePostController) Routes(routerGroup *gin.RouterGroup) {
-	routerGroup.POST("/like/:postId", controller.LikePost)
+	routerGroup.POST("/likePost", controller.CreateLikePost)
 }
 
-func (controller *LikePostController) LikePost(c *gin.Context) {
+func (controller *LikePostController) CreateLikePost(c *gin.Context) {
 	log.Info().Msg("Handling Request POST LikePost")
+	var like model.LikePost
 
-	postId := c.Param("postId")
-	if postId == "" {
-		api.SendBadRequest(c, "Missing postId parameter")
+	if err := c.BindJSON(&like); err != nil {
+		log.Error().Stack().Err(err).Msg("Invalid Data")
+		api.SendBadRequest(c, "Invalid Json Request")
 		return
 	}
 
-	id, err := strconv.ParseUint(postId, 10, 64)
-	if err != nil {
-		log.Error().Stack().Err(err).Msgf("PostId %s couldn't be parsed", postId)
-		api.SendBadRequest(c, "PostId couldn't be parsed. PostId should be a positive number")
-		return
-	}
-
-	err = controller.service.LikePost(id)
+	err := controller.service.CreateLikePost(&like)
 	if err != nil {
 		api.SendInternalServerError(c, err.Error())
 		return

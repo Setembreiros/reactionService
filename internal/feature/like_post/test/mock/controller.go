@@ -5,6 +5,7 @@
 package mock_like_post
 
 import (
+	model "reactionservice/internal/model/domain"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -33,16 +34,16 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
-// LikePost mocks base method.
-func (m *MockService) LikePost(postId uint64) error {
+// CreateLikePost mocks base method.
+func (m *MockService) CreateLikePost(like *model.LikePost) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LikePost", postId)
+	ret := m.ctrl.Call(m, "CreateLikePost", like)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// LikePost indicates an expected call of LikePost.
-func (mr *MockServiceMockRecorder) LikePost(postId interface{}) *gomock.Call {
+// CreateLikePost indicates an expected call of CreateLikePost.
+func (mr *MockServiceMockRecorder) CreateLikePost(like interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LikePost", reflect.TypeOf((*MockService)(nil).LikePost), postId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateLikePost", reflect.TypeOf((*MockService)(nil).CreateLikePost), like)
 }

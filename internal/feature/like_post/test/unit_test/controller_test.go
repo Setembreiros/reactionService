@@ -3,17 +3,15 @@ package unit_test_like_post
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"reactionservice/internal/bus"
 	"reactionservice/internal/feature/like_post"
 	mock_like_post "reactionservice/internal/feature/like_post/test/mock"
+	model "reactionservice/internal/model/domain"
 
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,72 +27,60 @@ func setUpController(t *testing.T) {
 	controller = like_post.NewLikePostController(controllerService)
 }
 
-func TestLikePost(t *testing.T) {
+func TestCreateLikePost(t *testing.T) {
 	setUpController(t)
-	ginContext.Request = httptest.NewRequest(http.MethodDelete, "/like", nil)
-	expectedPostId := uint64(1234)
-	postId := strconv.FormatUint(expectedPostId, 10)
-	ginContext.Params = []gin.Param{{Key: "postId", Value: postId}}
-	controllerService.EXPECT().LikePost(expectedPostId).Return(nil)
+	like := &model.LikePost{
+		Username: "usernameA",
+		PostId:   "post1",
+	}
+	data, _ := serializeData(like)
+	ginContext.Request = httptest.NewRequest(http.MethodPost, "/likePost", bytes.NewBuffer(data))
+	controllerService.EXPECT().CreateLikePost(like).Return(nil)
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
 		"content": null
 	}`
 
-	controller.LikePost(ginContext)
+	controller.CreateLikePost(ginContext)
 
 	assert.Equal(t, 200, apiResponse.Code)
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
 }
 
-func TestBadRequesErrorOnLikePost_WhenMissingPostId(t *testing.T) {
+func TestBadRequesErrorOnCreateLikePost_WhenInvalidData(t *testing.T) {
 	setUpController(t)
-	ginContext.Request, _ = http.NewRequest("POST", "/like", nil)
+	invalidData := "invalid data"
+	ginContext.Request, _ = http.NewRequest(http.MethodPost, "/likePost", bytes.NewBuffer([]byte(invalidData)))
 	expectedBodyResponse := `{
 		"error": true,
-		"message": "Missing postId parameter",
+		"message": "Invalid Json Request",
 		"content": null
 	}`
 
-	controller.LikePost(ginContext)
+	controller.CreateLikePost(ginContext)
 
 	assert.Equal(t, apiResponse.Code, 400)
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
-}
-
-func TestBadRequesErrorOnLikePost_WhenPostIdIsNotUint64(t *testing.T) {
-	setUpController(t)
-	ginContext.Request, _ = http.NewRequest("POST", "/like", nil)
-	expectedPostId := "no uint64"
-	ginContext.Params = []gin.Param{{Key: "postId", Value: expectedPostId}}
-	expectedBodyResponse := `{
-		"error": true,
-		"message": "PostId couldn't be parsed. PostId should be a positive number",
-		"content": null
-	}`
-
-	controller.LikePost(ginContext)
-
-	assert.Equal(t, apiResponse.Code, 400)
-	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
-	assert.Contains(t, loggerOutput.String(), fmt.Sprintf("PostId %v couldn't be parsed", expectedPostId))
 }
 
 func TestInternalServerErrorOnLikePost(t *testing.T) {
 	setUpController(t)
-	ginContext.Request = httptest.NewRequest(http.MethodDelete, "/like", nil)
-	expectedPostId := uint64(1234)
-	ginContext.Params = []gin.Param{{Key: "postId", Value: strconv.FormatUint(expectedPostId, 10)}}
+	like := &model.LikePost{
+		Username: "usernameA",
+		PostId:   "post1",
+	}
+	data, _ := serializeData(like)
+	ginContext.Request = httptest.NewRequest(http.MethodPost, "/likePost", bytes.NewBuffer(data))
 	expectedError := errors.New("some error")
-	controllerService.EXPECT().LikePost(expectedPostId).Return(expectedError)
+	controllerService.EXPECT().CreateLikePost(like).Return(expectedError)
 	expectedBodyResponse := `{
 		"error": true,
 		"message": "` + expectedError.Error() + `",
 		"content": null
 	}`
 
-	controller.LikePost(ginContext)
+	controller.CreateLikePost(ginContext)
 
 	assert.Equal(t, apiResponse.Code, 500)
 	assert.Equal(t, removeSpace(apiResponse.Body.String()), removeSpace(expectedBodyResponse))
