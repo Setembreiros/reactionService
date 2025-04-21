@@ -8,6 +8,7 @@ import (
 	"reactionservice/internal/bus"
 	database "reactionservice/internal/db"
 	"reactionservice/internal/feature/like_post"
+	"reactionservice/internal/feature/unlike_post"
 )
 
 type Provider struct {
@@ -46,6 +47,7 @@ func (p *Provider) ProvideApiEndpoint(sqlClient *sql_db.SqlDatabase, bus *bus.Ev
 func (p *Provider) ProvideApiControllers(sqlClient *sql_db.SqlDatabase, bus *bus.EventBus) []api.Controller {
 	return []api.Controller{
 		like_post.NewLikePostController(like_post.NewLikePostService(like_post.NewCreateLikePostRepository(database.NewDatabase(sqlClient)), bus)),
+		unlike_post.NewDeleteLikePostController(unlike_post.NewDeleteLikePostService(unlike_post.NewDeleteLikePostRepository(database.NewDatabase(sqlClient)), bus)),
 	}
 }
 

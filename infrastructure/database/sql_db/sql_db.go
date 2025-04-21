@@ -113,3 +113,42 @@ func (sd *SqlDatabase) GetLikePost(postId, username string) (*model.LikePost, er
 	log.Info().Msgf("Like retrieved successfully for postId: %s and username: %s", postId, username)
 	return like, nil
 }
+
+func (sd *SqlDatabase) DeleteLikePost(data *model.LikePost) error {
+	tx, err := sd.Client.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	query := `
+		DELETE FROM reactionservice.likePosts
+		WHERE postId = $1 AND username = $2
+	`
+	result, err := tx.Exec(query, data.PostId, data.Username)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to delete likepost, username: %s -> postId: %s", data.Username, data.PostId)
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Failed to get rows affected")
+		return err
+	}
+
+	if rowsAffected == 0 {
+		log.Info().Msgf("No like found to delete for username: %s -> postId: %s", data.Username, data.PostId)
+	} else {
+		log.Info().Msgf("Like deleted successfully, username: %s -> postId: %s", data.Username, data.PostId)
+	}
+
+	return nil
+}
