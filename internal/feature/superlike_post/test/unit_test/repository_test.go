@@ -27,6 +27,7 @@ func TestCreateSuperlikePostInRepository_WhenItReturnsSuccess(t *testing.T) {
 		Username: "usernameA",
 		PostId:   "post1",
 	}
+	dbClient.EXPECT().GetSuperlikePost(superlike.PostId, superlike.Username).Return(nil, nil)
 	dbClient.EXPECT().CreateSuperlikePost(superlike).Return(nil)
 
 	err := createSuperlikePostRepository.CreateSuperlikePost(superlike)
@@ -40,6 +41,7 @@ func TestErrorOnCreateSuperlikePostInRepository_WhenCreateSuperlikePostFails(t *
 		Username: "usernameA",
 		PostId:   "post1",
 	}
+	dbClient.EXPECT().GetSuperlikePost(superlike.PostId, superlike.Username).Return(nil, nil)
 	dbClient.EXPECT().CreateSuperlikePost(superlike).Return(errors.New("some error"))
 
 	err := createSuperlikePostRepository.CreateSuperlikePost(superlike)

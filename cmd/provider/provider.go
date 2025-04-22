@@ -8,7 +8,9 @@ import (
 	"reactionservice/internal/bus"
 	database "reactionservice/internal/db"
 	"reactionservice/internal/feature/like_post"
+	"reactionservice/internal/feature/superlike_post"
 	"reactionservice/internal/feature/unlike_post"
+	"reactionservice/internal/feature/unsuperlike_post"
 )
 
 type Provider struct {
@@ -48,6 +50,8 @@ func (p *Provider) ProvideApiControllers(sqlClient *sql_db.SqlDatabase, bus *bus
 	return []api.Controller{
 		like_post.NewLikePostController(like_post.NewLikePostService(like_post.NewCreateLikePostRepository(database.NewDatabase(sqlClient)), bus)),
 		unlike_post.NewDeleteLikePostController(unlike_post.NewDeleteLikePostService(unlike_post.NewDeleteLikePostRepository(database.NewDatabase(sqlClient)), bus)),
+		superlike_post.NewSuperlikePostController(superlike_post.NewSuperlikePostService(superlike_post.NewCreateSuperlikePostRepository(database.NewDatabase(sqlClient)), bus)),
+		unsuperlike_post.NewDeleteSuperlikePostController(unsuperlike_post.NewDeleteSuperlikePostService(unsuperlike_post.NewDeleteSuperlikePostRepository(database.NewDatabase(sqlClient)), bus)),
 	}
 }
 

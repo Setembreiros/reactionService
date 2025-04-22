@@ -29,7 +29,7 @@ func (controller *DeleteSuperlikePostController) Routes(routerGroup *gin.RouterG
 }
 
 func (controller *DeleteSuperlikePostController) DeleteSuperlikePost(c *gin.Context) {
-	log.Info().Msg("Handling Request POST DeleteSuperlikePost")
+	log.Info().Msg("Handling Request DELETE SuperlikePost")
 
 	superlike := &model.SuperlikePost{}
 
