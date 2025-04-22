@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	model "reactionservice/internal/model/domain"
+	customerror "reactionservice/internal/model/error"
 
 	"github.com/rs/zerolog/log"
 )
@@ -168,6 +169,38 @@ func (sd *SqlDatabase) GetSuperlikePost(postId, username string) (*model.Superli
 }
 
 func (sd *SqlDatabase) DeleteLikePost(data *model.LikePost) error {
+	query := `
+		DELETE FROM reactionservice.likePosts
+		WHERE postId = $1 AND username = $2
+	`
+	err := sd.deleteData(query, data.PostId, data.Username)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to delete likePost, username: %s -> postId: %s", data.Username, data.PostId)
+		return err
+	}
+
+	log.Info().Msgf("LikePost deleted successfully, username: %s -> postId: %s", data.Username, data.PostId)
+
+	return nil
+}
+
+func (sd *SqlDatabase) DeleteSuperlikePost(data *model.SuperlikePost) error {
+	query := `
+		DELETE FROM reactionservice.superlikePosts
+		WHERE postId = $1 AND username = $2
+	`
+	err := sd.deleteData(query, data.PostId, data.Username)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to delete superlikePosts, username: %s -> postId: %s", data.Username, data.PostId)
+		return err
+	}
+
+	log.Info().Msgf("SuperlikePosts deleted successfully, username: %s -> postId: %s", data.Username, data.PostId)
+
+	return nil
+}
+
+func (sd *SqlDatabase) deleteData(query string, args ...any) error {
 	tx, err := sd.Client.Begin()
 	if err != nil {
 		return err
@@ -181,13 +214,8 @@ func (sd *SqlDatabase) DeleteLikePost(data *model.LikePost) error {
 		}
 	}()
 
-	query := `
-		DELETE FROM reactionservice.likePosts
-		WHERE postId = $1 AND username = $2
-	`
-	result, err := tx.Exec(query, data.PostId, data.Username)
+	result, err := tx.Exec(query, args...)
 	if err != nil {
-		log.Error().Stack().Err(err).Msgf("Failed to delete likepost, username: %s -> postId: %s", data.Username, data.PostId)
 		return err
 	}
 
@@ -198,9 +226,9 @@ func (sd *SqlDatabase) DeleteLikePost(data *model.LikePost) error {
 	}
 
 	if rowsAffected == 0 {
-		log.Warn().Msgf("No like found to delete for username: %s -> postId: %s", data.Username, data.PostId)
-	} else {
-		log.Info().Msgf("Like deleted successfully, username: %s -> postId: %s", data.Username, data.PostId)
+		err = customerror.NewNotFoundError()
+		log.Error().Msg("Data not found")
+		return err
 	}
 
 	return nil
