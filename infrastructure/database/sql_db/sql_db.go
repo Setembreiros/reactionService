@@ -55,6 +55,42 @@ func (sd *SqlDatabase) Clean() {
 }
 
 func (sd *SqlDatabase) CreateLikePost(like *model.LikePost) error {
+	query := `
+		INSERT INTO reactionservice.likePosts (
+        	postId, 
+        	username
+    	) VALUES ($1, $2)
+	`
+	err := sd.insertData(query, like.PostId, like.Username)
+
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to create likePost, username: %s -> postId: %s", like.Username, like.PostId)
+		return err
+	}
+
+	log.Info().Msgf("LikePost created successfully, username: %s -> postId: %s", like.Username, like.PostId)
+	return nil
+}
+
+func (sd *SqlDatabase) CreateSuperlikePost(superlike *model.SuperlikePost) error {
+	query := `
+		INSERT INTO reactionservice.superlikePosts (
+        	postId, 
+        	username
+    	) VALUES ($1, $2)
+	`
+
+	err := sd.insertData(query, superlike.PostId, superlike.Username)
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to create superlikePost, username: %s -> postId: %s", superlike.Username, superlike.PostId)
+		return err
+	}
+
+	log.Info().Msgf("SuperlikePost created successfully, username: %s -> postId: %s", superlike.Username, superlike.PostId)
+	return nil
+}
+
+func (sd *SqlDatabase) insertData(query string, args ...any) error {
 	tx, err := sd.Client.Begin()
 	if err != nil {
 		return err
@@ -68,23 +104,14 @@ func (sd *SqlDatabase) CreateLikePost(like *model.LikePost) error {
 		}
 	}()
 
-	query := `
-		INSERT INTO reactionservice.likePosts (
-        	postId, 
-        	username
-    	) VALUES ($1, $2)
-	`
 	_, err = tx.Exec(
 		query,
-		like.PostId,
-		like.Username)
+		args...)
 
 	if err != nil {
-		log.Error().Stack().Err(err).Msgf("Failed to create likepost, username: %s -> postId: %s", like.Username, like.PostId)
 		return err
 	}
 
-	log.Info().Msgf("Like created successfully, username: %s -> postId: %s", like.Username, like.PostId)
 	return nil
 }
 
@@ -102,16 +129,42 @@ func (sd *SqlDatabase) GetLikePost(postId, username string) (*model.LikePost, er
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Info().Msgf("No like found for postId: %s and username: %s", postId, username)
+			log.Info().Msgf("No likePost found for postId: %s and username: %s", postId, username)
 			return nil, nil
 		}
 
-		log.Error().Stack().Err(err).Msgf("Failed to get like for postId: %s and username: %s", postId, username)
+		log.Error().Stack().Err(err).Msgf("Failed to get likePost for postId: %s and username: %s", postId, username)
 		return nil, err
 	}
 
-	log.Info().Msgf("Like retrieved successfully for postId: %s and username: %s", postId, username)
+	log.Info().Msgf("LikePost retrieved successfully for postId: %s and username: %s", postId, username)
 	return like, nil
+}
+
+func (sd *SqlDatabase) GetSuperlikePost(postId, username string) (*model.SuperlikePost, error) {
+	query := `
+		SELECT postId, username
+		FROM reactionservice.superlikePosts
+		WHERE postId = $1 AND username = $2
+	`
+
+	row := sd.Client.QueryRow(query, postId, username)
+
+	superlike := &model.SuperlikePost{}
+	err := row.Scan(&superlike.PostId, &superlike.Username)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Info().Msgf("No superlikePost found for postId: %s and username: %s", postId, username)
+			return nil, nil
+		}
+
+		log.Error().Stack().Err(err).Msgf("Failed to get superlikePost for postId: %s and username: %s", postId, username)
+		return nil, err
+	}
+
+	log.Info().Msgf("SuperlikePost retrieved successfully for postId: %s and username: %s", postId, username)
+	return superlike, nil
 }
 
 func (sd *SqlDatabase) DeleteLikePost(data *model.LikePost) error {

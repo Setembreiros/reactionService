@@ -33,3 +33,19 @@ func AddLikePost(t *testing.T, like *model.LikePost) {
 
 	integration_test_assert.AssertLikePostExists(t, database, like)
 }
+
+func AddSuperlikePost(t *testing.T, like *model.SuperlikePost) {
+	provider := provider.NewProvider("test", "postgres://postgres:artis@localhost:5432/artis?search_path=public&sslmode=disable")
+	sqlDb, err := provider.ProvideDb()
+	if err != nil {
+		panic(err)
+	}
+	database := database.NewDatabase(sqlDb)
+
+	err = database.Client.CreateSuperlikePost(like)
+	if err != nil {
+		panic(err)
+	}
+
+	integration_test_assert.AssertSuperlikePostExists(t, database, like)
+}
