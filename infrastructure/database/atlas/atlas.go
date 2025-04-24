@@ -22,7 +22,7 @@ func NewAtlasClient(connStr string) (*AtlasClient, error) {
 	}
 	workdir, err := atlasexec.NewWorkingDir(
 		atlasexec.WithMigrations(
-			os.DirFS("./infrastructure/atlas/migrations"),
+			os.DirFS("./infrastructure/database/atlas/migrations"),
 		),
 	)
 	if err != nil {

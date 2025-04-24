@@ -1,11 +1,14 @@
 package provider
 
 import (
-	"reactionservice/infrastructure/atlas"
+	"reactionservice/infrastructure/database/atlas"
+	"reactionservice/infrastructure/database/sql_db"
 	"reactionservice/infrastructure/kafka"
 	"reactionservice/internal/api"
 	"reactionservice/internal/bus"
 	database "reactionservice/internal/db"
+	"reactionservice/internal/feature/like_post"
+	"reactionservice/internal/feature/unlike_post"
 )
 
 type Provider struct {
@@ -24,8 +27,8 @@ func (p *Provider) ProvideAtlasCLient() (*atlas.AtlasClient, error) {
 	return atlas.NewAtlasClient(p.connStr)
 }
 
-func (p *Provider) ProvideDb() (*database.Database, error) {
-	return database.NewDatabase(p.connStr)
+func (p *Provider) ProvideDb() (*sql_db.SqlDatabase, error) {
+	return sql_db.NewDatabase(p.connStr)
 }
 
 func (p *Provider) ProvideEventBus() (*bus.EventBus, error) {
@@ -37,15 +40,18 @@ func (p *Provider) ProvideEventBus() (*bus.EventBus, error) {
 	return bus.NewEventBus(kafkaProducer), nil
 }
 
-func (p *Provider) ProvideApiEndpoint() *api.Api {
-	return api.NewApiEndpoint(p.env, p.ProvideApiControllers())
+func (p *Provider) ProvideApiEndpoint(sqlClient *sql_db.SqlDatabase, bus *bus.EventBus) *api.Api {
+	return api.NewApiEndpoint(p.env, p.ProvideApiControllers(sqlClient, bus))
 }
 
-func (p *Provider) ProvideApiControllers() []api.Controller {
-	return []api.Controller{}
+func (p *Provider) ProvideApiControllers(sqlClient *sql_db.SqlDatabase, bus *bus.EventBus) []api.Controller {
+	return []api.Controller{
+		like_post.NewLikePostController(like_post.NewLikePostService(like_post.NewCreateLikePostRepository(database.NewDatabase(sqlClient)), bus)),
+		unlike_post.NewDeleteLikePostController(unlike_post.NewDeleteLikePostService(unlike_post.NewDeleteLikePostRepository(database.NewDatabase(sqlClient)), bus)),
+	}
 }
 
-func (p *Provider) ProvideSubscriptions(database *database.Database) *[]bus.EventSubscription {
+func (p *Provider) ProvideSubscriptions(database *sql_db.SqlDatabase) *[]bus.EventSubscription {
 	return &[]bus.EventSubscription{}
 }
 
