@@ -15,8 +15,21 @@ func AssertLikePostExists(t *testing.T, db *database.Database, expectedLikePost 
 	assert.Equal(t, expectedLikePost.Username, like.Username)
 }
 
-func AssertLIkePostDoesNotExists(t *testing.T, db *database.Database, like *model.LikePost) {
+func AssertLikePostDoesNotExists(t *testing.T, db *database.Database, like *model.LikePost) {
 	like, err := db.Client.GetLikePost(like.PostId, like.Username)
+	assert.Nil(t, err)
+	assert.Nil(t, like)
+}
+
+func AssertSuperlikePostExists(t *testing.T, db *database.Database, expectedSuperlikePost *model.SuperlikePost) {
+	like, err := db.Client.GetSuperlikePost(expectedSuperlikePost.PostId, expectedSuperlikePost.Username)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedSuperlikePost.PostId, like.PostId)
+	assert.Equal(t, expectedSuperlikePost.Username, like.Username)
+}
+
+func AssertSuperlikePostDoesNotExists(t *testing.T, db *database.Database, like *model.SuperlikePost) {
+	like, err := db.Client.GetSuperlikePost(like.PostId, like.Username)
 	assert.Nil(t, err)
 	assert.Nil(t, like)
 }

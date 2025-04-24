@@ -1,17 +1,19 @@
-package integration_test_get_unlike_post
+package integration_test_get_superlike_post
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"reactionservice/internal/bus"
 	mock_bus "reactionservice/internal/bus/test/mock"
 	database "reactionservice/internal/db"
-	"reactionservice/internal/feature/unlike_post"
+	"reactionservice/internal/feature/superlike_post"
 	model "reactionservice/internal/model/domain"
 	"reactionservice/internal/model/event"
 	integration_test_arrange "reactionservice/test/integration_test_common/arrange"
 	integration_test_assert "reactionservice/test/integration_test_common/assert"
 	integration_test_builder "reactionservice/test/integration_test_common/builder"
+	"reactionservice/test/test_common"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +22,7 @@ import (
 
 var serviceExternalBus *mock_bus.MockExternalBus
 var db *database.Database
-var controller *unlike_post.DeleteLikePostController
+var controller *superlike_post.SuperlikePostController
 var apiResponse *httptest.ResponseRecorder
 var ginContext *gin.Context
 
@@ -35,42 +37,38 @@ func setUp(t *testing.T) {
 
 	// Real infrastructure and services
 	db = integration_test_arrange.CreateTestDatabase(ginContext)
-	repository := unlike_post.NewDeleteLikePostRepository(db)
-	service := unlike_post.NewDeleteLikePostService(repository, serviceBus)
-	controller = unlike_post.NewDeleteLikePostController(service)
+	repository := superlike_post.NewCreateSuperlikePostRepository(db)
+	service := superlike_post.NewSuperlikePostService(repository, serviceBus)
+	controller = superlike_post.NewSuperlikePostController(service)
 }
 
 func tearDown() {
 	db.Client.Clean()
 }
 
-func TestDeleteLikePost_WhenDatabaseReturnsSuccess(t *testing.T) {
+func TestCreateSuperlikePost_WhenDatabaseReturnsSuccess(t *testing.T) {
 	setUp(t)
 	defer tearDown()
-	like := &model.LikePost{
+	superlike := &model.SuperlikePost{
 		Username: "usernameA",
 		PostId:   "post1",
 	}
-	integration_test_arrange.AddLikePost(t, like)
-	ginContext.Request = httptest.NewRequest(http.MethodDelete, "/likePost", nil)
-	ginContext.Params = []gin.Param{
-		{Key: "postId", Value: like.PostId},
-		{Key: "username", Value: like.Username},
-	}
+	data, _ := test_common.SerializeData(superlike)
+	ginContext.Request = httptest.NewRequest(http.MethodPost, "/superlikePost", bytes.NewBuffer(data))
 	expectedBodyResponse := `{
 		"error": false,
 		"message": "200 OK",
 		"content": null
 	}`
-	expectedUserUnlikedPostEvent := &event.UserUnlikedPostEvent{
-		Username: like.Username,
-		PostId:   like.PostId,
+	expectedUserSuperlikedPostEvent := &event.UserSuperlikedPostEvent{
+		Username: superlike.Username,
+		PostId:   superlike.PostId,
 	}
-	expectedEvent := integration_test_builder.NewEventBuilder(t).WithName(event.UserUnlikedPostEventName).WithData(expectedUserUnlikedPostEvent).Build()
+	expectedEvent := integration_test_builder.NewEventBuilder(t).WithName(event.UserSuperlikedPostEventName).WithData(expectedUserSuperlikedPostEvent).Build()
 	serviceExternalBus.EXPECT().Publish(expectedEvent).Return(nil)
 
-	controller.DeleteLikePost(ginContext)
+	controller.CreateSuperlikePost(ginContext)
 
 	integration_test_assert.AssertSuccessResult(t, apiResponse, expectedBodyResponse)
-	integration_test_assert.AssertLikePostDoesNotExists(t, db, like)
+	integration_test_assert.AssertSuperlikePostExists(t, db, superlike)
 }

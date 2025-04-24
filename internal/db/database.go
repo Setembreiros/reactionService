@@ -15,8 +15,11 @@ type Database struct {
 type DatabaseClient interface {
 	Clean()
 	CreateLikePost(data *model.LikePost) error
+	CreateSuperlikePost(data *model.SuperlikePost) error
 	GetLikePost(postId, username string) (*model.LikePost, error)
+	GetSuperlikePost(postId, username string) (*model.SuperlikePost, error)
 	DeleteLikePost(data *model.LikePost) error
+	DeleteSuperlikePost(data *model.SuperlikePost) error
 }
 
 func NewDatabase(client DatabaseClient) *Database {

@@ -27,6 +27,7 @@ func TestCreateLikePostInRepository_WhenItReturnsSuccess(t *testing.T) {
 		Username: "usernameA",
 		PostId:   "post1",
 	}
+	dbClient.EXPECT().GetLikePost(like.PostId, like.Username).Return(nil, nil)
 	dbClient.EXPECT().CreateLikePost(like).Return(nil)
 
 	err := createLikePostRepository.CreateLikePost(like)
@@ -40,6 +41,7 @@ func TestErrorOnCreateLikePostInRepository_WhenCreateLikePostFails(t *testing.T)
 		Username: "usernameA",
 		PostId:   "post1",
 	}
+	dbClient.EXPECT().GetLikePost(like.PostId, like.Username).Return(nil, nil)
 	dbClient.EXPECT().CreateLikePost(like).Return(errors.New("some error"))
 
 	err := createLikePostRepository.CreateLikePost(like)
