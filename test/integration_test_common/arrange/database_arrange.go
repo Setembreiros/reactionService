@@ -49,3 +49,12 @@ func AddSuperlikePost(t *testing.T, like *model.SuperlikePost) {
 
 	integration_test_assert.AssertSuperlikePostExists(t, database, like)
 }
+
+func GetNextReviewId() uint64 {
+	provider := provider.NewProvider("test", "postgres://postgres:artis@localhost:5432/artis?search_path=public&sslmode=disable")
+	sqlDb, err := provider.ProvideDb()
+	if err != nil {
+		panic(err)
+	}
+	return sqlDb.GetNextReviewId()
+}

@@ -33,3 +33,15 @@ func AssertSuperlikePostDoesNotExists(t *testing.T, db *database.Database, like 
 	assert.Nil(t, err)
 	assert.Nil(t, like)
 }
+
+func AssertReviewExists(t *testing.T, db *database.Database, expectedReviewId uint64, expectedReview *model.Review) {
+	review, err := db.Client.GetReviewById(expectedReviewId)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedReviewId, review.Id)
+	assert.Equal(t, expectedReview.PostId, review.PostId)
+	assert.Equal(t, expectedReview.Username, review.Username)
+	assert.Equal(t, expectedReview.Content, review.Content)
+	assert.Equal(t, expectedReview.Rating, review.Rating)
+	assert.Equal(t, expectedReview.CreatedAt, review.CreatedAt)
+	assert.Equal(t, expectedReview.UpdatedAt, review.UpdatedAt)
+}

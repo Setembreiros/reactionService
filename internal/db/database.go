@@ -16,8 +16,10 @@ type DatabaseClient interface {
 	Clean()
 	CreateLikePost(data *model.LikePost) error
 	CreateSuperlikePost(data *model.SuperlikePost) error
+	CreateReview(data *model.Review) (uint64, error)
 	GetLikePost(postId, username string) (*model.LikePost, error)
 	GetSuperlikePost(postId, username string) (*model.SuperlikePost, error)
+	GetReviewById(id uint64) (*model.Review, error)
 	DeleteLikePost(data *model.LikePost) error
 	DeleteSuperlikePost(data *model.SuperlikePost) error
 }
