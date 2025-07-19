@@ -91,6 +91,62 @@ func (sd *SqlDatabase) CreateSuperlikePost(superlike *model.SuperlikePost) error
 	return nil
 }
 
+func (sd *SqlDatabase) CreateReview(review *model.Review) (uint64, error) {
+	query := `
+		INSERT INTO reactionservice.review (
+        	postId, 
+        	username, 
+        	content, 
+			rating,
+        	createdAt,
+			updatedAt
+    	) VALUES ($1, $2, $3, $4, $5, $6)
+    	RETURNING id
+	`
+	reviewId, err := sd.insertDataAndReturnId(
+		query,
+		review.PostId,
+		review.Username,
+		review.Content,
+		review.Rating,
+		review.CreatedAt,
+		review.UpdatedAt)
+
+	if err != nil {
+		log.Error().Stack().Err(err).Msgf("Failed to create review, username: %s -> postId: %s", review.Username, review.PostId)
+		return 0, err
+	}
+
+	return reviewId, nil
+}
+
+func (sd *SqlDatabase) insertDataAndReturnId(query string, args ...any) (uint64, error) {
+	tx, err := sd.Client.Begin()
+	if err != nil {
+		return 0, err
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	var id uint64
+
+	err = tx.QueryRow(
+		query,
+		args...).Scan(&id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
 func (sd *SqlDatabase) insertData(query string, args ...any) error {
 	tx, err := sd.Client.Begin()
 	if err != nil {
@@ -114,6 +170,60 @@ func (sd *SqlDatabase) insertData(query string, args ...any) error {
 	}
 
 	return nil
+}
+
+func (sd *SqlDatabase) GetReviewById(id uint64) (*model.Review, error) {
+	query := `
+		SELECT 
+			id,
+			postId, 
+			username, 
+			content, 
+			rating, 
+			createdAt,
+			updatedAt
+		FROM reactionservice.review
+		WHERE id = $1
+	`
+
+	var review model.Review
+	err := sd.Client.QueryRow(query, id).Scan(
+		&review.Id,
+		&review.PostId,
+		&review.Username,
+		&review.Content,
+		&review.Rating,
+		&review.CreatedAt,
+		&review.UpdatedAt)
+
+	review.CreatedAt = review.CreatedAt.UTC()
+	review.UpdatedAt = review.UpdatedAt.UTC()
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // No review found with the given ID
+		}
+		log.Error().Stack().Err(err).Msgf("Get review by id %d failed", id)
+		return nil, err
+	}
+
+	return &review, nil
+}
+
+func (sd *SqlDatabase) GetNextReviewId() uint64 {
+	query := `
+		SELECT nextval('reactionservice.review_id_seq')
+	`
+
+	var lastId uint64
+	err := sd.Client.QueryRow(query).Scan(&lastId)
+
+	if err != nil {
+		log.Error().Stack().Err(err).Msg("Failed to get next review id")
+		return 0
+	}
+
+	return lastId + uint64(1)
 }
 
 func (sd *SqlDatabase) GetLikePost(postId, username string) (*model.LikePost, error) {

@@ -8,6 +8,7 @@ require (
 	github.com/IBM/sarama v1.45.1
 	github.com/gin-contrib/cors v1.7.4
 	github.com/gin-gonic/gin v1.10.0
+	github.com/go-playground/assert/v2 v2.2.0
 	github.com/golang/mock v1.6.0
 	github.com/lib/pq v1.10.9
 	github.com/pressly/goose/v3 v3.24.3
