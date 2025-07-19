@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
-	"reactionservice/infrastructure/database/atlas"
+	"reactionservice/infrastructure/database/migrator"
 	"sync"
 	"syscall"
 
@@ -33,7 +33,7 @@ func (app *App) startup() {
 
 	provider := provider.NewProvider(app.Env, app.ConnStr)
 
-	migrator, err := provider.ProvideAtlasCLient()
+	migrator, err := provider.ProvideGooseCLient()
 	if err != nil {
 		os.Exit(1)
 	}
@@ -69,9 +69,9 @@ func (app *App) configuringLog() {
 	log.Logger = log.With().Caller().Logger()
 }
 
-func (app *App) runConfigurationTasks(atlasCLient *atlas.AtlasClient, subscriptions *[]bus.EventSubscription, eventBus *bus.EventBus) {
+func (app *App) runConfigurationTasks(gooseCLient *migrator.GooseClient, subscriptions *[]bus.EventSubscription, eventBus *bus.EventBus) {
 	app.configuringTasks.Add(2)
-	go app.applyMigrations(atlasCLient)
+	go app.applyMigrations(gooseCLient)
 	go app.subcribeEvents(subscriptions, eventBus) // Always subscribe event before init Kafka
 	app.configuringTasks.Wait()
 }
@@ -86,10 +86,10 @@ func (app *App) runServerTasks(kafkaConsumer *kafka.KafkaConsumer, apiEnpoint *a
 	app.shutdown()
 }
 
-func (app *App) applyMigrations(atlasCLient *atlas.AtlasClient) {
+func (app *App) applyMigrations(gooseCLient *migrator.GooseClient) {
 	defer app.configuringTasks.Done()
 
-	err := atlasCLient.ApplyMigrations(app.Ctx)
+	err := gooseCLient.ApplyMigrations(app.Ctx)
 	if err != nil {
 		log.Fatal().Stack().Err(err).Msgf("Failed to apply migrations")
 	}

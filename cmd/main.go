@@ -9,7 +9,7 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	env := strings.TrimSpace(os.Getenv("ENVIRONMENT"))
-	connStr := strings.TrimSpace(os.Getenv("CONN_STR"))
+	connStr := strings.Trim(strings.TrimSpace(os.Getenv("CONN_STR")), "\"")
 
 	app := &App{
 		Ctx:     ctx,
