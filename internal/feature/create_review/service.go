@@ -58,6 +58,7 @@ func (s *CreateReviewService) publishReviewWasCreatedEvent(data *model.Review) e
 		ReviewId:  data.Id,
 		Username:  data.Username,
 		PostId:    data.PostId,
+		Title:     data.Title,
 		Content:   data.Content,
 		Rating:    data.Rating,
 		CreatedAt: data.CreatedAt.Format(model.TimeLayout),

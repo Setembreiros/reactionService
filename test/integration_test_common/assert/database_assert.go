@@ -40,6 +40,7 @@ func AssertReviewExists(t *testing.T, db *database.Database, expectedReviewId ui
 	assert.Equal(t, expectedReviewId, review.Id)
 	assert.Equal(t, expectedReview.PostId, review.PostId)
 	assert.Equal(t, expectedReview.Username, review.Username)
+	assert.Equal(t, expectedReview.Title, review.Title)
 	assert.Equal(t, expectedReview.Content, review.Content)
 	assert.Equal(t, expectedReview.Rating, review.Rating)
 	assert.Equal(t, expectedReview.CreatedAt, review.CreatedAt)

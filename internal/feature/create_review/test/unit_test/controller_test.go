@@ -32,6 +32,7 @@ func TestCreateReview(t *testing.T) {
 	review := &model.Review{
 		Username: "usernameA",
 		PostId:   "post1",
+		Title:    "Título da miña review",
 		Content:  "a miña review",
 		Rating:   2,
 	}
@@ -55,6 +56,7 @@ func TestInternalServerErrorOnCreateReview(t *testing.T) {
 	review := &model.Review{
 		Username: "usernameA",
 		PostId:   "post1",
+		Title:    "Título da miña review",
 		Content:  "a miña review",
 		Rating:   2,
 	}

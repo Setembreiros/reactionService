@@ -36,6 +36,7 @@ func TestCreateReviewWithService_WhenItReturnsSuccess(t *testing.T) {
 	review := &model.Review{
 		Username: "usernameA",
 		PostId:   "post1",
+		Title:    "Título da miña review",
 		Content:  "a minha review",
 		Rating:   2,
 	}
@@ -47,6 +48,7 @@ func TestCreateReviewWithService_WhenItReturnsSuccess(t *testing.T) {
 		ReviewId:  expectedReviewId,
 		Username:  review.Username,
 		PostId:    review.PostId,
+		Title:     review.Title,
 		Content:   review.Content,
 		Rating:    review.Rating,
 		CreatedAt: review.CreatedAt.Format(model.TimeLayout),
@@ -67,6 +69,7 @@ func TestErrorOnCreateReviewWithService_WhenAddingToRepositoryFails(t *testing.T
 	review := &model.Review{
 		Username: "usernameA",
 		PostId:   "post1",
+		Title:    "Título da miña review",
 		Content:  "a miña review",
 		Rating:   2,
 	}
@@ -87,6 +90,7 @@ func TestErrorOnCreateReviewWithService_WhenPublishingEventFails(t *testing.T) {
 	review := &model.Review{
 		Username: "usernameA",
 		PostId:   "post1",
+		Title:    "Título da miña review",
 		Content:  "a minha review",
 		Rating:   2,
 	}
@@ -98,6 +102,7 @@ func TestErrorOnCreateReviewWithService_WhenPublishingEventFails(t *testing.T) {
 		ReviewId:  expectedReviewId,
 		Username:  review.Username,
 		PostId:    review.PostId,
+		Title:     review.Title,
 		Content:   review.Content,
 		Rating:    review.Rating,
 		CreatedAt: review.CreatedAt.Format(model.TimeLayout),

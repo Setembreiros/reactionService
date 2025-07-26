@@ -95,18 +95,20 @@ func (sd *SqlDatabase) CreateReview(review *model.Review) (uint64, error) {
 	query := `
 		INSERT INTO reactionservice.review (
         	postId, 
-        	username, 
+        	username,
+			title, 
         	content, 
 			rating,
         	createdAt,
 			updatedAt
-    	) VALUES ($1, $2, $3, $4, $5, $6)
+    	) VALUES ($1, $2, $3, $4, $5, $6, $7)
     	RETURNING id
 	`
 	reviewId, err := sd.insertDataAndReturnId(
 		query,
 		review.PostId,
 		review.Username,
+		review.Title,
 		review.Content,
 		review.Rating,
 		review.CreatedAt,
@@ -178,6 +180,7 @@ func (sd *SqlDatabase) GetReviewById(id uint64) (*model.Review, error) {
 			id,
 			postId, 
 			username, 
+			title,
 			content, 
 			rating, 
 			createdAt,
@@ -191,6 +194,7 @@ func (sd *SqlDatabase) GetReviewById(id uint64) (*model.Review, error) {
 		&review.Id,
 		&review.PostId,
 		&review.Username,
+		&review.Title,
 		&review.Content,
 		&review.Rating,
 		&review.CreatedAt,

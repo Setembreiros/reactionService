@@ -26,6 +26,7 @@ func TestCreateReviewInRepository_WhenItReturnsSuccess(t *testing.T) {
 	review := &model.Review{
 		Username: "usernameA",
 		PostId:   "post1",
+		Title:    "Título da miña review",
 		Content:  "a minha review",
 		Rating:   2,
 	}
@@ -43,6 +44,7 @@ func TestErrorOnCreateReviewInRepository_WhenCreateReviewFails(t *testing.T) {
 	review := &model.Review{
 		Username: "usernameA",
 		PostId:   "post1",
+		Title:    "Título da miña review",
 		Content:  "a minha review",
 		Rating:   2,
 	}

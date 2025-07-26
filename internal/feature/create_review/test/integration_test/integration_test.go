@@ -56,6 +56,7 @@ func TestCreateReview_WhenDatabaseReturnsSuccess(t *testing.T) {
 	review := &model.Review{
 		Username: "usernameA",
 		PostId:   "post1",
+		Title:    "Título da miña review",
 		Content:  "a miña review",
 		Rating:   2,
 	}
@@ -74,6 +75,7 @@ func TestCreateReview_WhenDatabaseReturnsSuccess(t *testing.T) {
 		Id:        reviewId,
 		Username:  review.Username,
 		PostId:    review.PostId,
+		Title:     review.Title,
 		Content:   review.Content,
 		Rating:    review.Rating,
 		CreatedAt: timeNow,
@@ -82,6 +84,7 @@ func TestCreateReview_WhenDatabaseReturnsSuccess(t *testing.T) {
 		ReviewId:  reviewId,
 		Username:  review.Username,
 		PostId:    review.PostId,
+		Title:     review.Title,
 		Content:   review.Content,
 		Rating:    review.Rating,
 		CreatedAt: timeNowString,
