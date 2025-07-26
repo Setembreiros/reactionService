@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"reactionservice/infrastructure/database/atlas"
+	"reactionservice/infrastructure/database/migrator"
 	"reactionservice/infrastructure/database/sql_db"
 	"reactionservice/infrastructure/kafka"
 	"reactionservice/internal/api"
@@ -25,8 +25,8 @@ func NewProvider(env, connStr string) *Provider {
 	}
 }
 
-func (p *Provider) ProvideAtlasCLient() (*atlas.AtlasClient, error) {
-	return atlas.NewAtlasClient(p.connStr)
+func (p *Provider) ProvideGooseCLient() (*migrator.GooseClient, error) {
+	return migrator.NewGooseClient(p.connStr)
 }
 
 func (p *Provider) ProvideDb() (*sql_db.SqlDatabase, error) {
