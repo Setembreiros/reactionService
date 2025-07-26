@@ -7,6 +7,7 @@ import (
 	"reactionservice/internal/api"
 	"reactionservice/internal/bus"
 	database "reactionservice/internal/db"
+	"reactionservice/internal/feature/create_review"
 	"reactionservice/internal/feature/like_post"
 	"reactionservice/internal/feature/superlike_post"
 	"reactionservice/internal/feature/unlike_post"
@@ -52,6 +53,7 @@ func (p *Provider) ProvideApiControllers(sqlClient *sql_db.SqlDatabase, bus *bus
 		unlike_post.NewDeleteLikePostController(unlike_post.NewDeleteLikePostService(unlike_post.NewDeleteLikePostRepository(database.NewDatabase(sqlClient)), bus)),
 		superlike_post.NewSuperlikePostController(superlike_post.NewSuperlikePostService(superlike_post.NewCreateSuperlikePostRepository(database.NewDatabase(sqlClient)), bus)),
 		unsuperlike_post.NewDeleteSuperlikePostController(unsuperlike_post.NewDeleteSuperlikePostService(unsuperlike_post.NewDeleteSuperlikePostRepository(database.NewDatabase(sqlClient)), bus)),
+		create_review.NewCreateReviewController(create_review.NewCreateReviewService(create_review.NewCreateReviewRepository(database.NewDatabase(sqlClient)), bus)),
 	}
 }
 
